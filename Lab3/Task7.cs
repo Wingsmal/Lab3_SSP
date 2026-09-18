@@ -6,9 +6,6 @@ using System.Reflection;
 
 namespace ReflectionLab
 {
-    // =========================================================
-    // 1. ИНТЕРФЕЙСЫ ПЛАГИНОВ (Из методички стр. 23-24)
-    // =========================================================
 
     // Общий интерфейс для всех плагинов
     public interface IPlugin
@@ -24,11 +21,7 @@ namespace ReflectionLab
         void ExecuteWithParams(Dictionary<string, object> parameters);
     }
 
-    // =========================================================
-    // 2. РЕАЛИЗАЦИИ ПЛАГИНОВ (Из методички стр. 24)
-    // =========================================================
 
-    // Плагин 1: Простой калькулятор
     public class CalculatorPlugin : IPlugin
     {
         public string Name => "Calculator";
@@ -43,7 +36,7 @@ namespace ReflectionLab
         public double Subtract(double a, double b) => a - b;
     }
 
-    // Плагин 2: Логгер с параметрами
+    //  Логгер с параметрами
     public class LoggerPlugin : IParameterizedPlugin
     {
         public string Name => "Logger";
@@ -63,10 +56,7 @@ namespace ReflectionLab
         }
     }
 
-    // =========================================================
-    // 3. ОСНОВНОЙ КЛАСС ДЛЯ ЗАГРУЗКИ (Из методички стр. 25-27)
-    // =========================================================
-
+ 
     public class PluginManager
     {
         private readonly List<IPlugin> _plugins = new List<IPlugin>();
@@ -78,7 +68,6 @@ namespace ReflectionLab
             Directory.CreateDirectory(_pluginsPath);
         }
 
-        // --- Метод загрузки встроенных плагинов (добавлено для соответствия скриншоту методички) ---
         public void LoadBuiltInPlugins()
         {
             Console.WriteLine("Loading built-in plugins...");
@@ -112,10 +101,8 @@ namespace ReflectionLab
 
             foreach (var type in types)
             {
-                // Проверка, реализует ли тип интерфейс IPlugin
                 if (typeof(IPlugin).IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract)
                 {
-                    // Создание экземпляра плагина
                     IPlugin plugin = (IPlugin)Activator.CreateInstance(type);
                     _plugins.Add(plugin);
                     Console.WriteLine($"Loaded plugin: {plugin.Name} v{plugin.Version}");
@@ -123,16 +110,14 @@ namespace ReflectionLab
             }
         }
 
-        // Получение всех загруженных плагинов
         public IEnumerable<IPlugin> GetPlugins() => _plugins;
 
-        // Получение плагина по имени
+
         public IPlugin GetPlugin(string name)
         {
             return _plugins.FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         }
 
-        // Выполнение плагина с параметрами через рефлексию
         public void ExecutePluginMethod(IPlugin plugin, string methodName, object[] parameters)
         {
             Type pluginType = plugin.GetType();
@@ -167,9 +152,6 @@ namespace ReflectionLab
         }
     }
 
-    // =========================================================
-    // 4. ЗАПУСК И ДЕМОНСТРАЦИЯ (Имитация вывода со стр. 27)
-    // =========================================================
 
     public static class Task7
     {
@@ -192,7 +174,6 @@ namespace ReflectionLab
 
             Console.WriteLine("\n=== Plugin Demonstrations ===");
 
-            // Демонстрация 1: Calculator
             var calcPlugin = manager.GetPlugin("Calculator");
             if (calcPlugin != null)
             {
@@ -208,7 +189,6 @@ namespace ReflectionLab
                 Console.WriteLine($"50.0 - 12.3 = {diff}");
             }
 
-            // Демонстрация 2: Logger
             var loggerPlugin = manager.GetPlugin("Logger");
             if (loggerPlugin != null)
             {
@@ -216,7 +196,6 @@ namespace ReflectionLab
                 loggerPlugin.Execute();
                 Console.WriteLine("Using parameterized execution:");
 
-                // Вызов метода из интерфейса IParameterizedPlugin
                 if (loggerPlugin is IParameterizedPlugin paramLogger)
                 {
                     var args = new Dictionary<string, object> { { "message", "Hello from Plugin System!" } };
@@ -224,12 +203,10 @@ namespace ReflectionLab
                 }
 
                 Console.WriteLine("Using reflection with parameters:");
-                // Вызов метода ExecuteWithParams через чистую рефлексию (Invoke)
                 var argsForReflection = new Dictionary<string, object> { { "message", "Reflection call!" } };
                 manager.ExecutePluginMethod(loggerPlugin, "ExecuteWithParams", new object[] { argsForReflection });
             }
 
-            // Демонстрация 3: Обработка ошибок (Вызов несуществующего метода)
             Console.WriteLine("\n=== Error Handling Demo ===");
             Console.WriteLine("Trying to call non-existent method:");
             manager.ExecutePluginMethod(calcPlugin, "NonExistentMethod", null);
