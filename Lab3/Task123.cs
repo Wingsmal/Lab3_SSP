@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace ReflectionLab
 {
-    // --- ЦЕЛЕВОЙ КЛАСС (Относится к Заданию 1) ---
+    // инициализация класса по заданию 1 
     public class UserProfile
     {
         private int _identifier;
