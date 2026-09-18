@@ -6,40 +6,40 @@ namespace ReflectionLab
 {
     public class UserProfile
     {
-        private int _age;
-        private string _username;
-        private double _balance;
+        private int _identifier;
+        private string _accountName;
+        private double _accountBalance;
 
-        public int Age
+        public int Identifier
         {
-            get => _age;
-            set { if (value >= 0 && value <= 120) _age = value; else throw new ArgumentException("Неверный возраст"); }
+            get => _identifier;
+            set { if (value >= 0) _identifier = value; else throw new ArgumentException("Идентификатор не может быть отрицательным."); }
         }
 
-        public string Username
+        public string AccountName
         {
-            get => _username;
-            set { if (!string.IsNullOrWhiteSpace(value)) _username = value; else throw new ArgumentException("Имя не может быть пустым"); }
+            get => _accountName;
+            set { if (!string.IsNullOrWhiteSpace(value)) _accountName = value; else throw new ArgumentException("Имя аккаунта не может быть пустым."); }
         }
 
-        public double Balance
+        public double AccountBalance
         {
-            get => _balance;
-            set { if (value >= 0) _balance = value; else throw new ArgumentException("Баланс не может быть отрицательным"); }
+            get => _accountBalance;
+            set { if (value >= 0) _accountBalance = value; else throw new ArgumentException("Баланс не может быть отрицательным."); }
         }
 
         public UserProfile() { }
 
-        public UserProfile(int age, string username, double balance)
+        public UserProfile(int id, string name, double balance)
         {
-            Age = age;
-            Username = username;
-            Balance = balance;
+            Identifier = id;
+            AccountName = name;
+            AccountBalance = balance;
         }
 
         public void DisplayInfo()
         {
-            Console.WriteLine($"[UserProfile Info] Имя: {Username}, Возраст: {Age}, Баланс: {Balance}");
+            Console.WriteLine($"[UserProfile] Состояние объекта: Identifier={Identifier}, AccountName='{AccountName}', AccountBalance={AccountBalance}");
         }
     }
 
@@ -47,42 +47,39 @@ namespace ReflectionLab
     {
         public static void Run()
         {
-            Console.WriteLine("======= ЗАДАНИЯ 1, 2, 3: БАЗОВАЯ РЕФЛЕКСИЯ =======");
+            Console.WriteLine("======= РАЗДЕЛ 1: Извлечение метаданных и динамическая инициализация =======");
 
-            Type type = typeof(UserProfile);
+            Type targetType = typeof(UserProfile);
 
-            Console.WriteLine("\n--- Задание 2: Инспекция методов (без get_ и set_) ---");
+            Console.WriteLine("\n--- 1.1 Анализ методов целевого типа (исключая аксессоры свойств) ---");
 
-            MethodInfo[] allMethods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+            MethodInfo[] methods = targetType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
-            foreach (var method in allMethods)
+            foreach (var method in methods)
             {
                 if (method.Name.StartsWith("get_") || method.Name.StartsWith("set_"))
                     continue;
 
-                string access = method.IsPublic ? "public" : (method.IsPrivate ? "private" : "protected");
-                string isStatic = method.IsStatic ? "static" : "instance";
+                string accessModifier = method.IsPublic ? "public" : (method.IsPrivate ? "private" : "protected");
+                string instanceModifier = method.IsStatic ? "static" : "instance";
                 var parameters = string.Join(", ", method.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"));
 
-                Console.WriteLine($"{access} {isStatic} {method.ReturnType.Name} {method.Name}({parameters})");
+                Console.WriteLine($"Сигнатура: {accessModifier} {instanceModifier} {method.ReturnType.Name} {method.Name}({parameters})");
             }
 
- 
-            Console.WriteLine("\n--- Задание 3: Создание объектов через Activator ---");
+            Console.WriteLine("\n--- 1.2 Инстанцирование объектов с использованием класса Activator ---");
+            object defaultInstance = Activator.CreateInstance(targetType);
 
-            object obj1 = Activator.CreateInstance(type);
+            targetType.GetProperty("AccountName").SetValue(defaultInstance, "TestAccount_01");
+            targetType.GetProperty("Identifier").SetValue(defaultInstance, 101);
 
-            type.GetProperty("Username").SetValue(obj1, "Студент");
-            type.GetProperty("Age").SetValue(obj1, 20);
+            Console.WriteLine($"Экземпляр №1 инстанцирован (конструктор по умолчанию). Валидация свойств: AccountName='{targetType.GetProperty("AccountName").GetValue(defaultInstance)}', Identifier={targetType.GetProperty("Identifier").GetValue(defaultInstance)}");
+            object parameterizedInstance = Activator.CreateInstance(targetType, new object[] { 202, "SystemAdmin", 50000.0 });
+            Console.WriteLine("Экземпляр №2 инстанцирован (параметризованный конструктор).");
 
-            Console.WriteLine($"Объект 1 создан. Читаем свойства: Имя = {type.GetProperty("Username").GetValue(obj1)}, Возраст = {type.GetProperty("Age").GetValue(obj1)}");
+            targetType.GetMethod("DisplayInfo").Invoke(parameterizedInstance, null);
 
-            object obj2 = Activator.CreateInstance(type, new object[] { 35, "Преподаватель", 10000.0 });
-            Console.WriteLine("Объект 2 создан с параметрами.");
-
-            type.GetMethod("DisplayInfo").Invoke(obj2, null);
-
-            Console.WriteLine("==================================================\n");
+            Console.WriteLine("============================================================================\n");
         }
     }
 }
