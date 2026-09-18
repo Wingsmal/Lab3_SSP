@@ -4,67 +4,80 @@ using System.Reflection;
 
 namespace ReflectionLab
 {
+    // 1. Атрибут для плагинов (Требование из методички)
+    [AttributeUsage(AttributeTargets.Class)]
+    public class PluginAttribute : Attribute
+    {
+        public string Name { get; }
+        public PluginAttribute(string name) => Name = name;
+    }
 
+    // 2. Интерфейс плагина
     public interface IPlugin
     {
-        string ComponentName { get; }
-        string ComponentVersion { get; }
-        void Initialize();
+        void Execute();
     }
 
+    // 3. Реализации плагинов с использованием Атрибута
+    [Plugin("ExportPlugin")]
     public class DataExporterPlugin : IPlugin
     {
-        public string ComponentName => "Модуль экспорта данных";
-        public string ComponentVersion => "1.0.0";
-        public void Initialize() => Console.WriteLine($"[INFO] {ComponentName} (v{ComponentVersion}) успешно инициализирован.");
+        public void Execute() => Console.WriteLine("[Плагин] Экспорт данных завершен.");
     }
 
+    [Plugin("TelemetryPlugin")]
     public class TelemetryPlugin : IPlugin
     {
-        public string ComponentName => "Модуль сбора телеметрии";
-        public string ComponentVersion => "2.1.3";
-        public void Initialize() => Console.WriteLine($"[INFO] {ComponentName} (v{ComponentVersion}) успешно инициализирован.");
+        public void Execute() => Console.WriteLine("[Плагин] Телеметрия собрана.");
     }
 
+    public class FakePlugin : IPlugin
+    {
+        // У этого плагина нет атрибута, он не должен быть загружен!
+        public void Execute() => Console.WriteLine("Я фейк.");
+    }
+
+    // --- Задание 7. Менеджер загрузки ---
     public static class Task7
     {
         public static void Run()
         {
-            Console.WriteLine("======= БЛОК 3: Динамическая загрузка компонентов (Плагинов) =======");
+            Console.WriteLine("\n--- ЗАДАНИЕ 7: Динамическая загрузка плагинов по конфигурации ---");
 
-            Assembly executingAssembly = Assembly.GetExecutingAssembly();
-            Type[] assemblyTypes = executingAssembly.GetTypes();
+            // Имитация файла конфигурации (в реальном проекте это читалось бы из config.json)
+            List<string> allowedPluginsConfig = new List<string> { "ExportPlugin", "TelemetryPlugin" };
 
-            List<IPlugin> registeredPlugins = new List<IPlugin>();
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            Type[] types = assembly.GetTypes();
 
-            Console.WriteLine("Выполнение сканирования типов сборки на наличие реализаций IPlugin...\n");
+            List<IPlugin> loadedPlugins = new List<IPlugin>();
 
-            // Поиск и регистрация компонентов
-            foreach (Type type in assemblyTypes)
+            foreach (Type type in types)
             {
-                // Фильтрация: тип реализует IPlugin, является конкретным классом (не интерфейсом/абстракцией)
+                // Проверяем, реализует ли класс интерфейс IPlugin
                 if (typeof(IPlugin).IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract)
                 {
-                    IPlugin pluginInstance = (IPlugin)Activator.CreateInstance(type);
-                    registeredPlugins.Add(pluginInstance);
-                    Console.WriteLine($"[DISCOVERY] Обнаружен и загружен компонент: {type.FullName}");
+                    // Ищем наш кастомный атрибут (Требование методички)
+                    PluginAttribute attr = type.GetCustomAttribute<PluginAttribute>();
+
+                    if (attr != null)
+                    {
+                        // Проверяем, разрешен ли плагин в нашем "файле конфигурации"
+                        if (allowedPluginsConfig.Contains(attr.Name))
+                        {
+                            IPlugin plugin = (IPlugin)Activator.CreateInstance(type);
+                            loadedPlugins.Add(plugin);
+                            Console.WriteLine($"Обнаружен и разрешен конфигурацией плагин: {attr.Name} (Класс: {type.Name})");
+                        }
+                    }
                 }
             }
 
-            Console.WriteLine("\nИнициализация зарегистрированных компонентов (Позднее связывание):");
-            foreach (var plugin in registeredPlugins)
+            Console.WriteLine("\nЗапуск загруженных плагинов:");
+            foreach (var plugin in loadedPlugins)
             {
-                // Динамическое получение метаданных и вызов метода
-                Type pluginType = plugin.GetType();
-                MethodInfo initMethod = pluginType.GetMethod("Initialize");
-
-                if (initMethod != null)
-                {
-                    initMethod.Invoke(plugin, null);
-                }
+                plugin.Execute();
             }
-
-            Console.WriteLine("===================================================================\n");
         }
     }
 }

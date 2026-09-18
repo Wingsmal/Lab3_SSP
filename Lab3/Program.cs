@@ -6,13 +6,17 @@ namespace ReflectionLab
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Запуск процесса: Анализ механизмов System.Reflection в среде .NET\n");
+            Console.WriteLine("=== ЛАБОРАТОРНАЯ РАБОТА: РЕФЛЕКСИЯ ===");
 
-            Tasks123.Run();
-            Tasks456.Run();
+            Task1.Run();
+            Task2.Run();
+            Task3.Run();
+            Task4.Run();
+            Task5.Run();
+            Task6.Run();
             Task7.Run();
 
-            Console.WriteLine("\nВсе процедуры выполнены штатно. Нажмите любую клавишу для завершения работы...");
+            Console.WriteLine("\nРабота завершена. Нажмите любую клавишу...");
             Console.ReadKey();
         }
     }
