@@ -4,7 +4,11 @@ using System.Reflection;
 
 namespace ReflectionLab
 {
+<<<<<<< HEAD
     // инициализация класса по заданию 1 
+=======
+    // --- ЦЕЛЕВОЙ КЛАСС ---
+>>>>>>> 169bfbf89c515b84b5a8c0557ca011e0b95c4d7f
     public class UserProfile
     {
         private int _identifier;
@@ -55,7 +59,6 @@ namespace ReflectionLab
             Console.WriteLine("Попытка создать объект UserProfile с некорректными данными (ID = -5)...");
             try
             {
-                // Демонстрируем, что наша инкапсуляция и валидация работают
                 UserProfile testUser = new UserProfile(-5, "Test", 100);
             }
             catch (ArgumentException ex)
@@ -86,7 +89,6 @@ namespace ReflectionLab
         {
             foreach (var m in methods)
             {
-                // Фильтрация свойств (get_ и set_)
                 if (m.Name.StartsWith("get_") || m.Name.StartsWith("set_")) continue;
 
                 string access = m.IsPublic ? "public" : "private";
@@ -96,7 +98,7 @@ namespace ReflectionLab
         }
     }
 
-    // --- ЗАДАНИЕ 3: Позднее связывание (Activator) ---
+    // --- ЗАДАНИЕ 3: Позднее связывание ---
     public static class Task3
     {
         public static void Run()
@@ -104,7 +106,7 @@ namespace ReflectionLab
             Console.WriteLine("\n--- ЗАДАНИЕ 3: Динамическое создание (Activator) ---");
             Type type = typeof(UserProfile);
 
-            // Способ 1: Конструктор без параметров + установка свойств
+            // Способ 1: Конструктор без параметров
             object user1 = Activator.CreateInstance(type);
             type.GetProperty("AccountName").SetValue(user1, "Admin");
             type.GetProperty("Identifier").SetValue(user1, 101);
